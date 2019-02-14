@@ -182,7 +182,7 @@ Then have R sing me the Twelve Days of Christmas song using (a) an apply functio
 ```{r}
 sing_line <- function(dataset, i){
   
-   my_line <- paste("On the", dataset$Day.in.Words[i], "day of Christmas, my true love sent to me")
+   my_line <- paste("On the", dataset$Day.in.Words[i], "day of Christmas, my true love sent to me ")
   
   if(i == 1){
     
@@ -192,7 +192,7 @@ sing_line <- function(dataset, i){
   
     for (j in i:2){
     
-      my_line <- paste0(" ", my_line, dataset$phrase[j], ", ")
+      my_line <- paste0("", my_line, dataset$phrase[j], ", ")
     
     }
     my_line <- paste(my_line, "and", dataset$phrase[1])
