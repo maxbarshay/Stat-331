@@ -1,0 +1,111 @@
+---
+title: "Lab 5"
+author: "Max Barshay"
+date: "2/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(broom)
+library(modelr)
+library(grid)
+```
+
+```{r, include=FALSE}
+names <- read_excel("/Users/mdbarshay/Desktop/Stat-331/Directories_etc/Babyname_Datasets/babies_ca.xlsx")
+```
+Use the "babies_ca" dataset supplied to you today to do an analysis of the name(s) of your choosing.  Your analysis should:
+
+- Include a linear model calculation with "lm"
+
+- Include a plot of the model and data
+
+- Include a plot of the residuals
+
+- Include a brief discussion
+
+```{r Created Max Catagories, echo = FALSE}
+names_all_max <- names %>% 
+  filter(str_detect(Name, "^Max"), Gender == "M")
+
+names_contain_max <- names %>% 
+  filter(str_detect(Name, "^Max"), Gender == "M", Name != "Max")
+
+names_puremax <- names %>% 
+  filter(Name == "Max", Gender == "M")
+```
+
+I made two categories of Max names: one with all names that start with Max but are not just "Max", and another category with just names that are exactly Max. I also filtered the results for just Male Max's. 
+
+
+```{r All Names Plot, echo = FALSE}
+names_contain_max %>% ggplot(aes(x=Year, y = Count, color = Name)) + geom_point() + facet_wrap(~ Name)
+
+names_puremax %>% ggplot(aes(x=Year, y = Count, color = Name)) + geom_point()
+```
+It appears that neither Max's nor names that start with Max were born before 1980. Lets have a look at only the Max's and names that start with Max after 1980. My hypothesis is that the first release of the movie "Mad Max" followed by the TV show "Max Headroom" caused the name Max to increase in popularity. 
+
+```{r Changed to 1980, echo = FALSE}
+new_all_max <- names_all_max %>% 
+  filter(Year >= 1980)
+
+new_names_contain_max <- names_contain_max %>% 
+  filter(Year >= 1980)
+
+new_pure_max <- names_puremax %>% 
+  filter(Year >= 1980)
+```
+
+
+```{r Graphed New Max Data, echo = FALSE}
+new_names_contain_max %>% ggplot(aes(x=Year, y = Count, color = Name)) + geom_point() + facet_wrap(~ Name, scales = "free_y") + stat_smooth(method = "lm")
+
+new_pure_max %>% ggplot(aes(x=Year, y = Count, color = Name)) + geom_point() + stat_smooth(method = "lm")
+```
+
+
+```{r LM just Max, echo = FALSE}
+pure_regression80 <- lm(Count ~ Year, data = new_pure_max)
+
+summary_pure <- tidy(summary(pure_regression80))
+
+summary_pure %>% 
+  filter(term == "Year")
+```
+This means that on average the number of Max's starting in 1980 has been increasing by about 11.76 Max's per year. The p-value which suggests that this is a significant change. 
+
+```{r lm all Max, echo = FALSE}
+all_regression80 <- lm(Count ~ Year, data = new_all_max)
+
+summary_all <- tidy(summary(all_regression80))
+
+summary_all %>% 
+  filter(term == "Year")
+```
+```{r model r for just Max, echo = FALSE}
+new_pure_max <- new_pure_max %>%
+  add_predictions(pure_regression80) %>% 
+  add_residuals(pure_regression80)
+```
+
+Compare pure max to other max names.
+
+```{r graphing the residuals}
+hist(new_pure_max$resid, main="Histogram of Residuals",
+ ylab="Count", xlab = "Residuals")
+
+qqnorm(new_pure_max$resid)
+qqline(new_pure_max$resid)
+
+ggplot(new_pure_max, aes(x=Year, y= resid)) + geom_point() + geom_hline(yintercept = 0, color = "red") + labs(y = "Residuals") + ggtitle("Residuals by Year") + theme(plot.title = element_text(hjust = 0.5)) + geom_segment(aes(x = 1998, y = 120, xend = 1995, yend = 100), arrow = arrow(length = unit(0.5, "cm")))
+```
+Looking at these residuals I see that my earlier hypothesis of movies creating popularity was accurate. This large group of residuals following the release of "Max Headroom" are much higher than any other residuals other than the group around 2010 to 2015. These two groups of highly positive residuals are actually great enough to cause the entire residual graph to shift. Even though all the residuals must sum to 0 we see the majority of the  residuals fall under the red line.
+
+```{r}
+
+```
+
